@@ -118,6 +118,7 @@ def is_legal(board, player, prev_moves, move):
         res = (ver == 2 and hor == 1) or (ver == 1 and hor == 2)
     elif piece == BISHOP:
         res = abs(start[ROW] - end[ROW]) == abs(start[COL] - end[COL]) and is_path_clear(board, [start, end], DIAGONAL)
+        print(res)
     elif piece == ROOK:
         res = (start[ROW] == end[ROW] or start[COL] == end[COL]) and is_path_clear(board, [start, end], STRAIGHT)
     elif piece == QUEEN:
@@ -178,7 +179,7 @@ def is_path_clear(board, path, direction):
             start = end
             end = tmp
         for i in range(1, end[ROW] - start[ROW]):
-            if start[ROW+i][COL+(i*x)] != FREE:
+            if board[ROW+i][COL+(i*x)] != FREE:
                 return False
     return True
 
@@ -186,7 +187,7 @@ def is_check_mated(board, player, prev_moves):
     for row in range(8):
         for col in range(8):
             piece = board[row][col]
-            if iece * player < 0:
+            if piece * player < 0:
                 tests = get_possible_moves(board, player, prev_moves, [row, col])
                 for move in tests:
                     test_board = make_move(copy.deepcopy(board), player, prev_moves, move)
