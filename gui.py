@@ -74,16 +74,15 @@ def play_game():
                     else:
                         move.append(pos)
                         move_state = core.START
-                        if core.is_checked(board, player):
-                            print('Check!')
-                            if core.is_check_mated(board, player, moves):
-                                print('Check mate!')
-                                raise BreakGame
-                            raise ContinueGame 
                         if core.make_move(board, player, moves, move): 
                             update_board(board, window)
                             moves.append(move)
                             player = -player
+                            if core.is_checked(board, player):
+                                print('Check!')
+                                if core.is_check_mated(board, player, moves):
+                                    print('Check mate!')
+                                    raise BreakGame
                         else:
                             raise ContinueGame
         except ContinueGame:

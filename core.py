@@ -84,26 +84,26 @@ def is_legal(board, player, prev_moves, move):
     end = move[END]
     # Move is not within the board
     if end[ROW] < 0 or end[ROW] > 7 or end[COL] < 0 or end[COL] > 7:
-        print('A move outside the board...')
+        # print('A move outside the board...')
         return False   
     piece = board[start[ROW]][start[COL]]
     end_square_piece = board[end[ROW]][end[COL]]
     # Static move, stupid move
     if start == end:
-        print('A static move...')
+        # print('A static move...')
         return False 
     # Cannot move an empty square
     if piece == FREE:
-        print('Trying to move a free square...')
+        # print('Trying to move a free square...')
         return False
     # Cannot move your opponent's pieces
     if player * piece < 0:
-        print('Trying to move your opponent\'s piece...')
+        # print('Trying to move your opponent\'s piece...')
         return False
     # Cannot move on top of friendly piece
     else:
         if end_square_piece * piece > 0:
-            print('Trying to eat your own piece...')
+            # print('Trying to eat your own piece...')
             return False
     res = False
     if piece == WHITE_PAWN or piece == BLACK_PAWN:
@@ -118,7 +118,6 @@ def is_legal(board, player, prev_moves, move):
         res = (ver == 2 and hor == 1) or (ver == 1 and hor == 2)
     elif piece == BISHOP:
         res = abs(start[ROW] - end[ROW]) == abs(start[COL] - end[COL]) and is_path_clear(board, [start, end], DIAGONAL)
-        print(res)
     elif piece == ROOK:
         res = (start[ROW] == end[ROW] or start[COL] == end[COL]) and is_path_clear(board, [start, end], STRAIGHT)
     elif piece == QUEEN:
@@ -136,15 +135,15 @@ def is_legal(board, player, prev_moves, move):
                 if prev_move[START] == king_pos or prev_move[START] == rook_pos:
                     moved_pieces = True
             castle = start[ROW] == end[ROW] and is_path_clear(board, [king_pos, rook_pos], STRAIGHT) and not moved_pieces
-        res = (ver == 1 and hor == 1) or ver + hor == 1 or castle
+        res = (ver == 1 and hor == 1) or ver + hor == 1 or (castle and not is_checked(board, player))
     # If that move gets the player in check
     if res:
         next_board = copy.deepcopy(board)
         next_board[end[ROW]][end[COL]] = next_board[start[ROW]][start[COL]]
         next_board[start[ROW]][start[COL]] = FREE
         res = not is_checked(next_board, player)
-        if not res:
-            print('That move gets you in check...')
+        # if not res:
+            # print('That move gets you in check...')
     return res
 
 # path is two different coordinates, direction is either STRAIGHT or DIAGONAL. Returns true if there is no piece along the path between the two coordinates
@@ -179,7 +178,7 @@ def is_path_clear(board, path, direction):
             start = end
             end = tmp
         for i in range(1, end[ROW] - start[ROW]):
-            if board[ROW+i][COL+(i*x)] != FREE:
+            if board[start[ROW]+i][start[COL]+(i*x)] != FREE:
                 return False
     return True
 
@@ -187,10 +186,11 @@ def is_check_mated(board, player, prev_moves):
     for row in range(8):
         for col in range(8):
             piece = board[row][col]
-            if piece * player < 0:
+            if piece * player > 0:
                 tests = get_possible_moves(board, player, prev_moves, [row, col])
                 for move in tests:
-                    test_board = make_move(copy.deepcopy(board), player, prev_moves, move)
+                    test_board = copy.deepcopy(board)
+                    make_move(test_board, player, prev_moves, move)
                     if not is_checked(test_board, player):
                         return False
     return True
@@ -206,9 +206,11 @@ def get_possible_moves(board, player, prev_moves, start):
         ends = [ [start[ROW]+1, start[COL]+2], [start[ROW]+1, start[COL]-2], [start[ROW]-1, start[COL]+2], [start[ROW]-1, start[COL]-2], \
                 [start[ROW]+2, start[COL]+1], [start[ROW]+2, start[COL]-1], [start[ROW]-2, start[COL]+1], [start[ROW]-2, start[COL]-1] ]
     elif piece == BISHOP or piece == QUEEN:
-        for x in range(-7, 8):
-            for y in range(-7, 8):
-                ends.append([start[ROW]+x, start[COL]+y])
+        for x in range(0, 8):
+            ends.append([start[ROW]+x, start[COL]+x])
+            ends.append([start[ROW]+x, start[COL]-x])
+            ends.append([start[ROW]-x, start[COL]+x])
+            ends.append([start[ROW]-x, start[COL]-x])
     if piece == ROOK or piece == QUEEN:
         for x in range(-7, 8):
             ends.append([start[ROW]+x, start[COL]])
@@ -252,11 +254,11 @@ def is_checked(board, player):
                         if test_row < 0 or test_row > 7 or test_col < 0 or test_col > 7:  # Not within the board
                             coords.remove(coord)
                             continue
-                        elif board[coord[ROW]][coord[COL]] == player*KING:
+                        elif board[test_row][test_col] == player*KING:
                             return True
-                        elif board[coord[ROW]][coord[COL]] == FREE:  # Keep traversing in the same direction
+                        elif board[test_row][test_col] == FREE:  # Keep traversing in the same direction
                             coords.remove(coord)
-                            coords.append([coord[ROW] + np.sign(coord[ROW]), coord[ROW] + np.sign(coord[ROW])])
+                            coords.append([coord[ROW] + np.sign(coord[ROW]), coord[COL] + np.sign(coord[COL])])
                         else:  # Stop traversing this direction
                             coords.remove(coord)
                 elif piece == KING:  # Useful when checking that a player cannot move its king next to the other player's king
