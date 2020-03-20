@@ -1,4 +1,5 @@
 import pygame
+import copy
 import core
 
 # Sizes
@@ -56,6 +57,7 @@ def play_game():
     window = pygame.display.set_mode(SIZE)
     board = core.get_new_board()
     player = core.WHITE
+    boards = [copy.deepcopy(board)]
     moves = []
     draw_board(window)
     update_board(board, window)
@@ -76,6 +78,7 @@ def play_game():
                         move_state = core.START
                         if core.make_move(board, player, moves, move): 
                             update_board(board, window)
+                            boards.append(copy.deepcopy(board))
                             moves.append(move)
                             player = -player
                             if core.is_checked(board, player):
@@ -83,6 +86,9 @@ def play_game():
                                 if core.is_check_mated(board, player, moves):
                                     print('Check mate!')
                                     raise BreakGame
+                            if core.is_a_draw(board, player, boards, moves):
+                                print('It\'s a draw!')
+                                raise BreakGame
                         else:
                             raise ContinueGame
         except ContinueGame:

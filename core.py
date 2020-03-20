@@ -1,7 +1,9 @@
 import numpy as np
 import copy
 
-# TODO: Stalemate detection
+# TODO: Insufficient material detection
+# TODO: Implement draw offer and acceptance
+# TODO: Implement resigning
 # TODO: Implement pawn promotion choice
 
 # Board
@@ -182,19 +184,23 @@ def is_path_clear(board, path, direction):
     return True
 
 def is_check_mated(board, player, prev_moves):
-    for row in range(8):
-        for col in range(8):
-            piece = board[row][col]
-            if piece * player > 0:
-                tests = get_possible_moves(board, player, prev_moves, [row, col])
-                for move in tests:
-                    test_board = copy.deepcopy(board)
-                    make_move(test_board, player, prev_moves, move)
-                    if not is_checked(test_board, player):
-                        return False
+    tests = get_possible_moves(board, player, prev_moves)
+    for move in tests:
+        test_board = copy.deepcopy(board)
+        make_move(test_board, player, prev_moves, move)
+        if not is_checked(test_board, player):
+            return False
     return True
 
-def get_possible_moves(board, player, prev_moves, start):
+def get_possible_moves(board, player, prev_moves):
+    moves = []
+    for row in range(8):
+        for col in range(8):
+            if board[row][col] * player > 0:
+                moves.extend(get_piece_possible_moves(board, player, prev_moves, start))
+    return moves
+
+def get_piece_possible_moves(board, player, prev_moves, start):
     piece = abs(board[start[ROW]][start[END]])
     ends = []
     moves = []
@@ -221,6 +227,32 @@ def get_possible_moves(board, player, prev_moves, start):
         if is_legal(board, player, prev_moves, [start, end]):
             moves.append([start, end])
     return moves
+
+def is_a_draw(board, player, prev_boards, prev_moves):
+    # Stalemate
+    if not is_checked(board, player) and len(get_possible_moves(board, player, prev_moves, start)) == 0:
+        return True
+    # Threefold repetition - The official rules are more strict (same en-passant and castling opportunities, etc.)
+    for a in prev_boards:
+        for b in prev_boards:
+            if a is not b and np.array_equal(a, b):
+                for c in prev_boards:
+                    if c is not a and c is not b and np.array_equal(a, c):
+                        return True
+    # Fifty-moves rule
+    if len(prev_moves) >= 100:
+        draw = True
+        for i in range(len(prev_moves)-100, len(prev_moves)-1):
+            start = prev_moves[i][START]
+            end = prev_moves[i][END]
+            if abs(prev_boards[i][start[ROW]][start[COL]]) == PAWN or prev_boards[i][end[ROW]][end[COL]] != FREE:
+                draw = False
+                break
+        if draw:
+            return True
+    # Insufficient material
+
+    return False
 
 def is_checked(board, player):
     for row in range(8):
