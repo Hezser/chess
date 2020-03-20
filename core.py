@@ -3,7 +3,6 @@ import copy
 
 # TODO: Stalemate detection
 # TODO: Implement pawn promotion choice
-# TODO: Implement weird pawn rule
 
 # Board
 ROW = 0
@@ -35,24 +34,6 @@ BLACK_BISHOP = -3
 BLACK_ROOK = -4
 BLACK_QUEEN = -5
 BLACK_KING = -6
-
-class game:
-    def __init__(self, board, moves):
-        self.board = board
-        self.moves = moves
-
-    def __init__(self):
-        self.board = get_new_board()
-        self.moves = []
-    
-    def get_board():
-        return self.board
-
-    def get_moves():
-        return self.moves
-
-    def add_move(move):
-        moves.append(move)
 
 # Black is rows 0,1 and white is rows 6,7 initially
 def get_new_board():
