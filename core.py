@@ -2,7 +2,7 @@ import numpy as np
 import copy
 
 # TODO: Stalemate detection
-# TODO: Implement pawn promotions
+# TODO: Implement pawn promotion choice
 # TODO: Implement weird pawn rule
 
 # Board
@@ -64,19 +64,31 @@ def get_new_board():
     return board
 
 def make_move(board, player, prev_moves, move):
+    start = move[START]
+    end = move[END]
+    piece = board[start[ROW]][start[COL]]
     if not is_legal(board, player, prev_moves, move):
         return False
     # Castle
-    if abs(board[move[START][ROW]][move[START][COL]]) == KING and abs(move[START][COL]-move[END][COL]) == 2:
-        board[move[END][ROW]][move[END][COL]] = board[move[START][ROW]][move[START][COL]]
-        rook_start_pos = [((-player) % 9) - 1, (int((move[START][COL]-move[END][COL])/2) % 9) - 1]
-        rook_end_pos = [((-player) % 9) - 1, (int((move[START][COL]-move[END][COL])/2) % 4) + 2]
+    if abs(piece) == KING and abs(start[COL]-end[COL]) == 2:
+        board[end[ROW]][end[COL]] = piece
+        rook_start_pos = [((-player) % 9) - 1, (int((start[COL]-end[COL])/2) % 9) - 1]
+        rook_end_pos = [((-player) % 9) - 1, (int((start[COL]-end[COL])/2) % 4) + 2]
         board[rook_end_pos[ROW]][rook_end_pos[COL]] = board[rook_start_pos[ROW]][rook_start_pos[COL]]
-        board[move[START][ROW]][move[START][COL]] = FREE
+        board[start[ROW]][start[COL]] = FREE
         board[rook_start_pos[ROW]][rook_start_pos[COL]] = FREE
+    # Pawn promotion
+    elif abs(piece) == PAWN and end[ROW] == (player-1) % 9:
+        board[end[ROW]][end[COL]] = QUEEN * player  # Assuming all promotions are queens
+        board[start[ROW]][start[COL]] = FREE
+    # En passant
+    elif abs(piece) == PAWN and start[COL] != end[COL] and board[end[ROW]][end[COL]] == FREE:
+        board[end[ROW]][end[COL]] = piece
+        board[start[ROW]][start[COL]] = FREE
+        board[end[ROW]+player][end[COL]] = FREE
     else:
-        board[move[END][ROW]][move[END][COL]] = board[move[START][ROW]][move[START][COL]]
-        board[move[START][ROW]][move[START][COL]] = FREE
+        board[end[ROW]][end[COL]] = piece
+        board[start[ROW]][start[COL]] = FREE
     return True
 
 def is_legal(board, player, prev_moves, move):
@@ -106,12 +118,18 @@ def is_legal(board, player, prev_moves, move):
             # print('Trying to eat your own piece...')
             return False
     res = False
-    if piece == WHITE_PAWN or piece == BLACK_PAWN:
-        move_once = start[ROW] == (end[ROW] + piece) and start[COL] == end[COL] and end_square_piece == FREE
-        move_twice = (-piece) % 7 == start[ROW] and start[ROW] == (end[ROW] + 2*piece) and start[COL] == end[COL] and board[end[ROW]-1][end[COL]] == FREE and end_square_piece == FREE
-        eat = start[ROW] == (end[ROW] + piece) and abs(start[COL] - end[COL]) == 1 and end_square_piece != FREE
-        res = move_once or move_twice or eat
     piece = abs(piece)
+    if piece == PAWN:
+        move_once = start[ROW] == (end[ROW] + player) and start[COL] == end[COL] and end_square_piece == FREE
+        move_twice = (-player) % 7 == start[ROW] and start[ROW] == (end[ROW] + 2*player) and start[COL] == end[COL] and board[end[ROW]-1][end[COL]] == FREE and end_square_piece == FREE
+        eat = start[ROW] == (end[ROW] + player) and abs(start[COL] - end[COL]) == 1 and end_square_piece != FREE
+        if len(prev_moves) == 0:
+            en_passant = False
+        else:
+            last_move = prev_moves[len(prev_moves)-1]
+            en_passant = start[ROW] == (end[ROW] + player) and abs(start[COL] - end[COL]) == 1 and board[end[ROW]+player][end[COL]] == PAWN * (-player) and \
+                last_move[END][ROW]-last_move[START][ROW] == 2 * player and last_move[END][ROW] == end[ROW]+player and last_move[END][COL] == end[COL]
+        res = move_once or move_twice or eat or en_passant
     if piece == KNIGHT:
         ver = abs(start[ROW] - end[ROW])
         hor = abs(start[COL] - end[COL])
