@@ -2,6 +2,10 @@ import pygame
 import copy
 import core
 
+# TODO: Resigning
+# TODO: Draw offer and acceptance/refusal
+# TODO: Pawn promotion choice
+
 # Sizes
 SIZE = WIDTH, HEIGHT = 640, 640
 SQUARE_SIZE = 80

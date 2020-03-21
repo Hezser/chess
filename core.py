@@ -1,11 +1,6 @@
 import numpy as np
 import copy
 
-# TODO: Insufficient material detection
-# TODO: Implement draw offer and acceptance
-# TODO: Implement resigning
-# TODO: Implement pawn promotion choice
-
 # Board
 ROW = 0
 COL = 1
@@ -197,7 +192,7 @@ def get_possible_moves(board, player, prev_moves):
     for row in range(8):
         for col in range(8):
             if board[row][col] * player > 0:
-                moves.extend(get_piece_possible_moves(board, player, prev_moves, start))
+                moves.extend(get_piece_possible_moves(board, player, prev_moves, [row, col]))
     return moves
 
 def get_piece_possible_moves(board, player, prev_moves, start):
@@ -230,7 +225,7 @@ def get_piece_possible_moves(board, player, prev_moves, start):
 
 def is_a_draw(board, player, prev_boards, prev_moves):
     # Stalemate
-    if not is_checked(board, player) and len(get_possible_moves(board, player, prev_moves, start)) == 0:
+    if not is_checked(board, player) and len(get_possible_moves(board, player, prev_moves)) == 0:
         return True
     # Threefold repetition - The official rules are more strict (same en-passant and castling opportunities, etc.)
     for a in prev_boards:
@@ -251,7 +246,33 @@ def is_a_draw(board, player, prev_boards, prev_moves):
         if draw:
             return True
     # Insufficient material
-
+    white_knights = 0
+    black_knights = 0
+    white_bishops = 0
+    black_bishops = 0
+    bishops_cords = []
+    other = False
+    for row in range(8):
+        for col in range(8):
+            piece = board[row][col]
+            if abs(piece) in [PAWN, ROOK, QUEEN]:
+                other = True
+                break
+            elif piece == WHITE_BISHOP:
+                white_bishops += 1
+                bishops_cords.append([row, col])
+            elif piece == BLACK_BISHOP:
+                black_bishops += 1
+                bishops_cords.append([row, col])
+            elif piece == WHITE_KNIGHT:
+                white_knights += 1
+            elif piece == BLACK_KNIGHT:
+                black_knights += 1
+    if not other:
+        total = white_bishops+black_bishops+white_knights+black_knights
+        if total == 0 or total == 1 or (total == 2 and white_bishops == 1 and black_bishops == 1 and \
+                (bishops_cords[0][row] + bishops_cords[0][col]) % 2 == (bishops_cords[0][row] + bishops_cords[0][col]) % 2):
+            return True
     return False
 
 def is_checked(board, player):
@@ -300,4 +321,3 @@ def is_checked(board, player):
                         if test_row >= 0 and test_row <= 7 and test_col >= 0 and test_col <= 7 and board[test_row][test_col] == player*KING:
                             return True
     return False
-
