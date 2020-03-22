@@ -1,4 +1,5 @@
 import pygame
+import time
 import copy
 import core
 
@@ -9,6 +10,12 @@ import core
 # Sizes
 SIZE = WIDTH, HEIGHT = 640, 640
 SQUARE_SIZE = 80
+
+# Colors
+GREEN = (85, 222, 95)
+RED = (239, 7, 7)
+LIGHT = (232, 235, 239)
+DARK = (125, 135, 150)
 
 # Images
 imgs = { core.WHITE_PAWN: 'assets/white_pawn.png',
@@ -25,13 +32,13 @@ imgs = { core.WHITE_PAWN: 'assets/white_pawn.png',
          core.BLACK_KING: 'assets/black_king.png' }
 
 class ContinueGame(Exception):
-   pass
+    pass
 
 class BreakGame(Exception):
     pass
 
 def draw_board(window):
-    colors = [(232, 235, 239), (125, 135, 150)]
+    colors = [LIGHT, DARK]
     c = 0
     for x in range(8):
         for y in range(8):
@@ -51,10 +58,16 @@ def update_board(board, window):
     pygame.display.update()
 
 def translate_position(pos):
-    res = []
-    res.append(int(pos[1]/SQUARE_SIZE))
-    res.append(int(pos[0]/SQUARE_SIZE))
-    return res
+    return [int(pos[1]/SQUARE_SIZE), int(pos[0]/SQUARE_SIZE)]
+
+# Returns the positions of the upper left corner
+def translate_coordinate(coord):
+    return (coord[1]*SQUARE_SIZE, coord[0]*SQUARE_SIZE)
+
+def select(window, coord, color):
+    pos = translate_coordinate(coord)
+    pygame.draw.rect(window, color, (pos[0], pos[1], SQUARE_SIZE, SQUARE_SIZE), 5)
+    pygame.display.update()
 
 def play_game():
     pygame.init()
@@ -77,6 +90,7 @@ def play_game():
                         move = []
                         move.append(pos)
                         move_state = core.END
+                        select(window, move[core.START], GREEN)
                     else:
                         move.append(pos)
                         move_state = core.START
@@ -94,6 +108,10 @@ def play_game():
                                 print('It\'s a draw!')
                                 raise BreakGame
                         else:
+                            select(window, move[core.START], RED)
+                            select(window, move[core.END], RED)
+                            time.sleep(1)
+                            update_board(board, window)
                             raise ContinueGame
         except ContinueGame:
             continue
