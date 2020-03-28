@@ -2,6 +2,7 @@ import pygame
 import time
 import copy
 import core
+import minimax
 
 # TODO: Resigning
 # TODO: Draw offer and acceptance/refusal
@@ -30,6 +31,9 @@ imgs = { core.WHITE_PAWN: 'assets/white_pawn.png',
          core.BLACK_QUEEN: 'assets/black_queen.png',
          core.WHITE_KING: 'assets/white_king.png',
          core.BLACK_KING: 'assets/black_king.png' }
+
+# AI players
+AI_PLAYERS = [core.WHITE, core.BLACK]
 
 class ContinueGame(Exception):
     pass
@@ -80,8 +84,12 @@ def play_game():
     update_board(board, window)
     move_state = core.START
     move = []
+    selected_move = False
     while(True):
-        try:
+        if player in AI_PLAYERS:
+            move = minimax.get_move(board, player, moves)
+            selected_move = True
+        else:
             ev = pygame.event.get()
             for event in ev:
                 if event.type == pygame.MOUSEBUTTONUP:
@@ -94,25 +102,30 @@ def play_game():
                     else:
                         move.append(pos)
                         move_state = core.START
-                        if core.make_move(board, player, moves, move): 
-                            update_board(board, window)
-                            boards.append(copy.deepcopy(board))
-                            moves.append(move)
-                            player = -player
-                            if core.is_checked(board, player):
-                                print('Check!')
-                                if core.is_check_mated(board, player, moves):
-                                    print('Check mate!')
-                                    raise BreakGame
-                            if core.is_a_draw(board, player, boards, moves):
-                                print('It\'s a draw!')
-                                raise BreakGame
-                        else:
-                            select(window, move[core.START], RED)
-                            select(window, move[core.END], RED)
-                            time.sleep(1)
-                            update_board(board, window)
-                            raise ContinueGame
+                        selected_move = True
+        try: 
+            if selected_move:
+                selected_move = False
+                if player in AI_PLAYERS or core.is_legal(board, player, moves, move):
+                    core.make_move(board, player, moves, move)
+                    update_board(board, window)
+                    boards.append(copy.deepcopy(board))
+                    moves.append(move)
+                    player = -player
+                    if core.is_checked(board, player):
+                        print('Check!')
+                        if core.is_check_mated(board, player, moves):
+                            print('Check mate!')
+                            raise BreakGame
+                    if core.is_a_draw(board, player, boards, moves):
+                        print('It\'s a draw!')
+                        raise BreakGame
+                else:
+                    select(window, move[core.START], RED)
+                    select(window, move[core.END], RED)
+                    time.sleep(1)
+                    update_board(board, window)
+                    raise ContinueGame
         except ContinueGame:
             continue
         except BreakGame:

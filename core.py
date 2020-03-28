@@ -45,8 +45,6 @@ def make_move(board, player, prev_moves, move):
     start = move[START]
     end = move[END]
     piece = board[start[ROW]][start[COL]]
-    if not is_legal(board, player, prev_moves, move):
-        return False
     # Castle
     if abs(piece) == KING and abs(start[COL]-end[COL]) == 2:
         board[end[ROW]][end[COL]] = piece
@@ -67,7 +65,7 @@ def make_move(board, player, prev_moves, move):
     else:
         board[end[ROW]][end[COL]] = piece
         board[start[ROW]][start[COL]] = FREE
-    return True
+    return board
 
 def is_legal(board, player, prev_moves, move):
     start = move[START]

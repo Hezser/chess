@@ -36,7 +36,8 @@ while(True):
     if len(start) != 2 or len(end) != 2:
         print('This is 2D chess...')
         continue
-    if core.make_move(board, player, moves, [start, end]):
+    if core.is_legal(board, player, moves, [start, end]):
+        core.make_move(board, player, moves, [start, end])
         print()
         print(board)
         print()
